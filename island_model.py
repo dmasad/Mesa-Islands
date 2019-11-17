@@ -1,12 +1,14 @@
 from mesa import Model, Agent
 from mesa.time import RandomActivation
-from mesa.space import MultiGrid
+#from mesa.space import MultiGrid
+from layer_grid import LayeredGrid
 
 from utils import weighted_random, make_weighted_syllables, make_word
 
 class IslandCell:
     ''' One tile of land.
     '''
+    layer = "Land"
     
     def __init__(self, pos, island):
         ''' Set a new tile of land.
@@ -37,7 +39,9 @@ class Island(Agent):
             neighbors = grid.get_neighborhood(cell.pos, False) # No diagonals
             landlocked = True
             for c in neighbors:
-                if grid.is_cell_empty(c):
+                x, y = c
+                #if grid.is_cell_empty(c):
+                if grid[x][y]["Land"] is None:
                     possible_cells.append(c)
                     landlocked = False
             cell.landlocked = landlocked
@@ -47,6 +51,7 @@ class Island(Agent):
         grid.place_agent(new_island, next_cell)
 
 class Person(Agent):
+    layer = "People"
     
     def __init__(self, unique_id, name, model):
         '''
@@ -61,7 +66,8 @@ class Person(Agent):
         grid = self.model.grid
         possible_steps = []
         for x, y in grid.get_neighborhood(self.pos, True):
-            if len(grid[x][y]) > 0:
+            #if len(grid[x][y]) > 0:
+            if grid[x][y]["Land"] is not None:
                 possible_steps.append((x, y))
         next_step = self.random.choice(possible_steps)
         # TODO: Better logging of actions
@@ -78,7 +84,9 @@ class WorldModel(Model):
         # Set world parameters
         self.width = 100
         self.height = 100
-        self.grid = MultiGrid(self.height, self.width, torus=True)
+        #self.grid = MultiGrid(self.height, self.width, torus=True)
+        self.grid = LayeredGrid(self.width, self.height, torus=True, 
+                                layers={"Land": "Single", "People": "Multi"})
         
         # Set up islands
         self.n_islands = n_islands

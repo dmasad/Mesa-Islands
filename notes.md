@@ -19,4 +19,26 @@ The simplest behavior we want from a people agent is to walk to a random adjacen
 
 For now we can get around this by assuming that water cells will just be empty. This won't work forever, since at some point we might want to have things in the water (e.g. boats). But it's 23:00 and I want to get *something* done, so.
 
+This works! And even renders slowly but not too painfully in Mesa's browser-based front-end.
+
+# Adding ships
+
+I initially assumed that the model should involve people walking around on the islands. But the very existence of islands -- and the fact that the map is mostly sea -- suggests that interesting agents might actually be ships going between islands. Implementing ships also opens up two interesting technical challenges: (a) addressing the cell contents issue discussed above, since ships need to move across cells that are empty, have one or more other ship in them, or land cells which have a port; and (b) pathfinding via A* or similar, since the ships should probably be able to navigate from port to port.
+
+## Building a layered grid
+
+There are [at least] two potential approaches to building a layered grid for Mesa. One of them is to have the LayerGrid be a thin wrapper around several underlying grid objects, one per layer; the other is to have each cell be a dictionary, with each layer being a value. 
+
+I'm going to implement the latter for now, because it seems simpler and more in line with how other grid classes are implemented.
+
+An API question here is whether layers should (a) come automatically from the agent class; (b) be an agent-specified property; (c) be specified by hand by the coder for each operation. For now I'm going to go with (b) since it seems like it provides the flexibility to have multiple classes on the same layer (e.g. wolves and sheep, or merchant ships and pirate ships) but minimizes the chances for random typos present in (c). 
+
+Another Mesa improvement note: since we generally work with `pos` tuples, wouldn't it make sense to allow grids to accept a `grid[pos]` accessor to get to the coordinates directly? 
+
+It needs more (read: any) testing, but for now it seems to work!
+
+
+
+
+
 
