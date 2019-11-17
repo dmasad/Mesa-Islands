@@ -2,6 +2,8 @@ from mesa import Model, Agent
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 
+from utils import weighted_random, make_weighted_syllables, make_word
+
 class IslandCell:
     ''' One tile of land.
     '''
@@ -44,6 +46,15 @@ class Island(Agent):
         self.cells.append(new_island)
         grid.place_agent(new_island, next_cell)
 
+class Person(Agent):
+    
+    def __init__(self, unique_id, name, model):
+        '''
+        '''
+        self.unique_id = unique_id
+        self.model = model
+        self.name = name
+        
 
 class WorldModel(Model):
     
