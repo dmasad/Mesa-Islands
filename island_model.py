@@ -64,6 +64,8 @@ class Person(Agent):
             if len(grid[x][y]) > 0:
                 possible_steps.append((x, y))
         next_step = self.random.choice(possible_steps)
+        # TODO: Better logging of actions
+        # print(f"{self.name} moved from {self.pos} to {next_step}")
         grid.move_agent(self, next_step)
 
 class WorldModel(Model):
@@ -71,6 +73,7 @@ class WorldModel(Model):
     def __init__(self, n_islands=1, land_fraction=0.25, n_agents=100):
         
         self.schedule = RandomActivation(self)
+        self.running = True
         
         # Set world parameters
         self.width = 100
