@@ -54,11 +54,21 @@ class Person(Agent):
         self.unique_id = unique_id
         self.model = model
         self.name = name
-        
+        self.pos = None  # Will get handled when agent is added to grid.
+    
+    def step(self):
+        # Take a random step to an adjacent non-water tile
+        grid = self.model.grid
+        possible_steps = []
+        for x, y in grid.get_neighborhood(self.pos, True):
+            if len(grid[x][y]) > 0:
+                possible_steps.append((x, y))
+        next_step = self.random.choice(possible_steps)
+        grid.move_agent(self, next_step)
 
 class WorldModel(Model):
     
-    def __init__(self, n_islands=1, land_fraction=0.25):
+    def __init__(self, n_islands=1, land_fraction=0.25, n_agents=100):
         
         self.schedule = RandomActivation(self)
         
@@ -71,6 +81,12 @@ class WorldModel(Model):
         self.n_islands = n_islands
         self.land_fraction = land_fraction
         self.islands = []
+        self.make_islands()
+        
+        # Set up agents
+        self.n_agents = n_agents
+        self.syllable_weights = make_weighted_syllables()
+        self.create_agents()
     
     def make_islands(self):
         '''
@@ -90,6 +106,21 @@ class WorldModel(Model):
         for _ in range(total_cells):
             island = self.random.choice(self.islands)
             island.grow()
+    
+    def create_agents(self):
+        for i in range(self.n_agents):
+            name = make_word(self.syllable_weights)
+            agent = Person(i, name, self)
+            # Pick a starting island and cell
+            island = self.random.choice(self.islands)
+            cell = self.random.choice(island.cells)
+            self.grid.place_agent(agent, cell.pos)
+            self.schedule.add(agent)
+    
+    def step(self):
+        self.schedule.step()
+        
+        
         
         
         

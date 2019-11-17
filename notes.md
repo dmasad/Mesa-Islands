@@ -13,5 +13,10 @@ I just want an extremely simply speculative name generator. To get this, I first
 
 This is an extremely crude method of generating a language that is only barely anchored in any real linguistics at all, but it has the advantage of generating names that (a) are generally legible to someone used to reading English, and (b) look vaguely like the kind of names you'd see in old-timey pulp genre fiction. Three names chosen at random from a generated list are  'Udsir', 'Fives', 'Iguxfa', all of which sound like they'd be right at home in a lesser Conan the Barbarian novel.
 
+# Adding people
+
+The simplest behavior we want from a people agent is to walk to a random adjacent non-water tile. This immediately highlights a problem with the way Mesa implements the MultiGrid class: if a cell is non-empty, it contains a list; to find out if one of those items is of a certain class (for example, a patch-like IslandCell) we need to check each and every item in that list.
+
+For now we can get around this by assuming that water cells will just be empty. This won't work forever, since at some point we might want to have things in the water (e.g. boats). But it's 23:00 and I want to get *something* done, so.
 
 
