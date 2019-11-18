@@ -1,3 +1,5 @@
+import networkx as nx
+
 from mesa import Model, Agent
 from mesa.time import RandomActivation
 #from mesa.space import MultiGrid
@@ -74,6 +76,13 @@ class Person(Agent):
         # print(f"{self.name} moved from {self.pos} to {next_step}")
         grid.move_agent(self, next_step)
 
+class Port:
+    layer = "Ports"
+    
+    def __init__(self, name, pos):
+        self.pos = pos
+        self.name = name
+
 class WorldModel(Model):
     
     def __init__(self, n_islands=1, land_fraction=0.25, n_agents=100):
@@ -86,7 +95,9 @@ class WorldModel(Model):
         self.height = 100
         #self.grid = MultiGrid(self.height, self.width, torus=True)
         self.grid = LayeredGrid(self.width, self.height, torus=True, 
-                                layers={"Land": "Single", "People": "Multi"})
+                                layers={"Land": "Single", 
+                                        "People": "Multi",
+                                        "Ports": "Single"})
         
         # Set up islands
         self.n_islands = n_islands
@@ -94,10 +105,17 @@ class WorldModel(Model):
         self.islands = []
         self.make_islands()
         
-        # Set up agents
+        # Set up people
         self.n_agents = n_agents
         self.syllable_weights = make_weighted_syllables()
         self.create_agents()
+        
+        # Set up seafaring: ports and shipping lanes
+        self.ports = {}
+        self.ports_per_island = 1
+        self.create_ports()
+        self.sea_lanes = {}
+        self.calculate_sea_lanes()
     
     def make_islands(self):
         '''
@@ -128,6 +146,67 @@ class WorldModel(Model):
             self.grid.place_agent(agent, cell.pos)
             self.schedule.add(agent)
     
+    def create_ports(self):
+        ''' Choose random non-landlocked island cell for a port 
+        '''
+        port_count = 0
+        for island in self.islands:
+            possible_cells = [cell for cell in island.cells 
+                              if not cell.landlocked]
+            # possible_cells = []
+            # for cell in island.cells:
+            #     neighbors = self.grid.get_neighborhood(cell.pos, False) # No diagonals
+            #     for c in neighbors:
+            #         x, y = c
+            #         if self.grid[x][y]["Land"] is None:
+            #             possible_cells.append(cell)
+                        
+            for _ in range(self.ports_per_island):
+                cell = self.random.choice(possible_cells)
+                name = f"Port {port_count}"
+                port = Port(name, cell.pos)
+                self.grid.place_agent(port, cell.pos)
+                self.ports[name] = port
+                port_count += 1
+    
+    def calculate_sea_lanes(self):
+        ''' Build a network of sea cells + ports, then calculate shortest paths
+        '''
+        # Build the graph
+        # TODO: This can be streamlined for code aesthetics and performance
+        G = nx.Graph()
+        for x in range(self.width):
+            for y in range(self.height):
+                cell = (x, y)
+                if self.grid[x][y]["Land"] is None:
+                    G.add_node(cell)
+                    for neighbor in self.grid.get_neighborhood(cell, False):
+                        x, y = neighbor
+                        if self.grid[x][y]["Land"] is None:
+                            G.add_edge(cell, neighbor)
+        # Add ports:
+        for port in self.ports.values():
+            G.add_node(port.pos)
+            for neighbor in self.grid.get_neighborhood(port.pos, False):
+                x, y = neighbor
+                if self.grid[x][y]["Land"] is None:
+                    G.add_edge(port.pos, neighbor)
+        
+        # Now do the pathfinding:
+        for start_name, start_port in self.ports.items():
+            for end_name, end_port in self.ports.items():
+                if (start_name == end_name or 
+                    (end_name, start_name) in self.sea_lanes): 
+                    continue
+                try:
+                    path = nx.shortest_path(G, start_port.pos, end_port.pos)
+                    self.sea_lanes[(start_name, end_name)] = path
+                    path = list(path)
+                    path.reverse()
+                    self.sea_lanes[(end_name, start_name)] = path
+                except:
+                    print(f"Could not find path between {start_name} and {end_name}")
+                
     def step(self):
         self.schedule.step()
         

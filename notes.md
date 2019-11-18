@@ -37,6 +37,21 @@ Another Mesa improvement note: since we generally work with `pos` tuples, wouldn
 
 It needs more (read: any) testing, but for now it seems to work!
 
+## Ship pathfinding
+
+I realized two things: (a) with lots of ships and only a few ports, I don't want to constantly recalculate pathfinding for routes that were already solved, and (b) I don't really actually want to implement A* from scratch. Instead, I'm going to cheat and build a graph of sea tiles, and then use NetworkX to calculate shortest paths. The real question here is whether this network will end up too big, especially with lots and lots of irrelevant nodes. 
+
+Some initial testing suggests this is fast enough, so let's do it.
+
+We'll randomly select `N` (initially 1) shore cell per island to be a port; then build the navigation network to generate shortest paths; the place ships at ports and have them move along those paths each step.
+
+Two things I might implement later on: (a) paths can be discrete knowledge objects that ships (or captains / sailors) can discover and pass along to one another; (b) weight graphs so that ships want to stick closer to land. 
+
+Hitting a problem with the network somehow not being disconnected around the ports. Possible a residual effect of some cells being marked as non-landlocked because their landlockedness didn't get updated in the final round?
+
+(Well, possible, but after way too much time I just forgot an argument in the shortest-path syntax)
+
+
 
 
 
