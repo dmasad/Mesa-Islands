@@ -1,9 +1,9 @@
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import CanvasGrid
 
-from island_model import WorldModel, IslandCell, Person
+from island_model import WorldModel, IslandCell, Person, Port, Ship
 
-def get_portrayay(agent):
+def get_portrayal(agent):
     if agent is None:
         portrayal = {"Shape": "rect", "w": 1, "h": 1, 
                      "Color": "LightCyan", "Filled": "true", "Layer": 0}
@@ -14,9 +14,17 @@ def get_portrayay(agent):
     elif type(agent) is Person:
         portrayal = {"Shape": "circle", "r": 0.7, 
                      "Color": "Black", "Filled": "true", "Layer": 2}
+    
+    elif type(agent) is Port:
+        portrayal = {"Shape": "rect", "w": 0.7, "h": 0.7, 
+                     "Color": "MidnightBlue", "Filled": "true", "Layer": 2}
+    
+    elif type(agent) is Ship:
+        portrayal = {"Shape": "circle", "r": 0.7, 
+                     "Color": "Black", "Filled": "true", "Layer": 2}
     return portrayal
 
-canvas_element = CanvasGrid(get_portrayay, 100, 100, 500, 500)
+canvas_element = CanvasGrid(get_portrayal, 100, 100, 500, 500)
 
 model_params = {"n_islands": 7,
                 "land_fraction": 0.25,

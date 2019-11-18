@@ -77,11 +77,60 @@ class Person(Agent):
         grid.move_agent(self, next_step)
 
 class Port:
-    layer = "Ports"
+    layer = "Ships"
     
     def __init__(self, name, pos):
         self.pos = pos
         self.name = name
+
+class Ship(Agent):
+    layer = "Ships"
+    
+    def __init__(self, unique_id, name, model, starting_port):
+        ''' Create a ship
+        '''
+        self.unique_id = unique_id
+        self.name = name
+        self.model = model
+        self.destination = None
+        self.current_path = None
+        self.current_step = None
+        
+        self.condition = "At port"
+        self.current_port = starting_port.name
+        self.pos = starting_port.pos
+    
+    def choose_destination(self):
+        ''' Chart a course to a random port.
+        '''
+        # Choose a port
+        next_port = self.random.choice(list(self.model.ports.values()))
+        if (self.current_port, next_port.name) not in self.model.sea_lanes:
+            return
+        
+        self.destination = next_port.name
+        self.condition = "Sailing"
+        self.current_step = 0
+        self.path = self.model.sea_lanes[(self.current_port, self.destination)]
+    
+    def sail(self):
+        self.current_step += 1
+        if self.current_step == len(self.path):
+            self.condition = "At port"
+            self.current_port = self.destination
+            self.destination = None
+            return
+            
+        next_step = self.path[self.current_step]
+        self.model.grid.move_agent(self, next_step)
+    
+    def step(self):
+        if self.condition == "Sailing":
+            self.sail()
+        elif self.condition == "At port":
+            if self.random.random() < 0.25:
+                self.choose_destination()
+
 
 class WorldModel(Model):
     
@@ -97,7 +146,7 @@ class WorldModel(Model):
         self.grid = LayeredGrid(self.width, self.height, torus=True, 
                                 layers={"Land": "Single", 
                                         "People": "Multi",
-                                        "Ports": "Single"})
+                                        "Ships": "Multi"})
         
         # Set up islands
         self.n_islands = n_islands
@@ -116,6 +165,9 @@ class WorldModel(Model):
         self.create_ports()
         self.sea_lanes = {}
         self.calculate_sea_lanes()
+        
+        # Set up ships
+        self.make_ships()
     
     def make_islands(self):
         '''
@@ -145,6 +197,15 @@ class WorldModel(Model):
             cell = self.random.choice(island.cells)
             self.grid.place_agent(agent, cell.pos)
             self.schedule.add(agent)
+    
+    def make_ships(self):
+        ports = list(self.ports.values())
+        for i in range(self.n_agents):
+            name = f"Ship {i}"
+            port = self.random.choice(ports)
+            ship = Ship(name, name, self, port)
+            self.grid.place_agent(ship, port.pos)
+            self.schedule.add(ship)
     
     def create_ports(self):
         ''' Choose random non-landlocked island cell for a port 
