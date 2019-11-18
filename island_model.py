@@ -5,7 +5,10 @@ from mesa.time import RandomActivation
 #from mesa.space import MultiGrid
 from layer_grid import LayeredGrid
 
-from utils import weighted_random, make_weighted_syllables, make_word
+from utils import (weighted_random, make_weighted_syllables, make_word, 
+                   make_place_name_model)
+
+import tracery
 
 class IslandCell:
     ''' One tile of land.
@@ -112,6 +115,7 @@ class Ship(Agent):
         self.condition = "Sailing"
         self.current_step = 0
         self.path = self.model.sea_lanes[(self.current_port, self.destination)]
+        self.model.log(f"{self.name} departed {self.current_port} for {self.destination}")
     
     def sail(self):
         self.current_step += 1
@@ -119,6 +123,7 @@ class Ship(Agent):
             self.condition = "At port"
             self.current_port = self.destination
             self.destination = None
+            self.model.log(f"{self.name} arrived at {self.current_port}.")
             return
             
         next_step = self.path[self.current_step]
@@ -133,6 +138,17 @@ class Ship(Agent):
 
 
 class WorldModel(Model):
+    
+    # Tracery grammar for naming things:
+    grammar = {
+        "virtue": ["Courage", "Kindness", "Wisdom", "Cunning", "Charity", 
+                   "Mercy", "Love", "Pride", "Glory"],
+        "title": ["Prince", "Princess", "Duke", "President", "Exilarch", 
+                  "Duchess", "Elector", "Senator"],
+        "ship_names": ["#virtue# of #place#", "#place# #virtue#", 
+                       "#title# of #place#", "#place# #title#", 
+                       "#virtue# #virtue#", "#title#'s #virtue#"]
+    }
     
     def __init__(self, n_islands=1, land_fraction=0.25, n_agents=100):
         
@@ -154,6 +170,13 @@ class WorldModel(Model):
         self.islands = []
         self.make_islands()
         
+        # Generate language
+        self.syllable_weights = make_weighted_syllables(3)
+        self.make_place_name = make_place_name_model(self.syllable_weights, 
+                                                     n_prefixes=2, 
+                                                     prob_prefix=0.3,
+                            syllable_count_weights={2: 1, 3: 3, 4: 1, 5:0.5})
+        
         # Set up people
         self.n_agents = n_agents
         self.syllable_weights = make_weighted_syllables()
@@ -166,8 +189,16 @@ class WorldModel(Model):
         self.sea_lanes = {}
         self.calculate_sea_lanes()
         
+        # Update ship naming scheme with port names
+        self.grammar["place"] = [port for port in self.ports]
+        self.grammar = tracery.Grammar(self.grammar)
+        
         # Set up ships
         self.make_ships()
+        
+        # Set up logging
+        self.verbose = True
+        self._log = []
     
     def make_islands(self):
         '''
@@ -201,7 +232,8 @@ class WorldModel(Model):
     def make_ships(self):
         ports = list(self.ports.values())
         for i in range(self.n_agents):
-            name = f"Ship {i}"
+            #name = f"Ship {i}"
+            name = self.grammar.flatten("#ship_names#")
             port = self.random.choice(ports)
             ship = Ship(name, name, self, port)
             self.grid.place_agent(ship, port.pos)
@@ -214,17 +246,10 @@ class WorldModel(Model):
         for island in self.islands:
             possible_cells = [cell for cell in island.cells 
                               if not cell.landlocked]
-            # possible_cells = []
-            # for cell in island.cells:
-            #     neighbors = self.grid.get_neighborhood(cell.pos, False) # No diagonals
-            #     for c in neighbors:
-            #         x, y = c
-            #         if self.grid[x][y]["Land"] is None:
-            #             possible_cells.append(cell)
-                        
             for _ in range(self.ports_per_island):
                 cell = self.random.choice(possible_cells)
-                name = f"Port {port_count}"
+                #name = f"Port {port_count}"
+                name = self.make_place_name()
                 port = Port(name, cell.pos)
                 self.grid.place_agent(port, cell.pos)
                 self.ports[name] = port
@@ -270,6 +295,13 @@ class WorldModel(Model):
                 
     def step(self):
         self.schedule.step()
+    
+    def log(self, message):
+        log_entry = f"{self.schedule.steps}: {message}"
+        if self.verbose:
+            print(log_entry)
+        self._log.append(log_entry)
+        
         
         
         
