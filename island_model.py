@@ -140,11 +140,11 @@ class Ship(Agent):
 class AirCell(Agent):
     layer = "Weather"
     # Weather model parameters
-    land_temp = 0.01
-    water_temp = 0.005
-    cloudy_factor = 0.5
+    land_temp = 0.012
+    water_temp = 0.01 #0.005
+    cloudy_factor = 0.75 #0.5
     
-    land_humidity = 0
+    land_humidity = 0.01
     water_humidity = 0.05
     rain_temp = -0.02
     

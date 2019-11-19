@@ -81,5 +81,10 @@ This seems to help, and the rain still does some oscillation things, but the wor
 
 One more tweak to add sooner rather than later: let's have the wind change direction every so often. This doesn't seem to make a huge difference.
 
-Increasing the humidity lost by rain does seem to produce bands of rain that are quite nice, but things are still too cloudy. The main issue is that the clouds are everywhere, not just in nice bands. One possibility is that we just need to raise the threshold for clouds / rain?
+Increasing the humidity lost by rain does seem to produce bands of rain that are quite nice, but things are still too cloudy. The main issue is that the clouds are everywhere, not just in nice bands. One possibility is that we just need to raise the threshold for clouds / rain? But this didn't really end up working either.
 
+Another thing that's happening is that the islands are warm enough to keep rain and clouds both away.
+
+If nothing else, we can probably speed up the performance of the weather model by making it psuedo-matrixy. Instead of moving cells around, we can grab a cell via a wind vector and transfer the properties to it. That keeps the ABM architecture, but reduces the need to make 100x100 move calls, with all the weird accompanying artifacts. It's almost certainly the case that wind speeds (and specifically variable wind speeds) are a critical factor missing from the model.
+
+One last experiment: initializing cells with random humidity.
