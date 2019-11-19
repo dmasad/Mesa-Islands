@@ -290,7 +290,7 @@ class WorldModel(Model):
         self.weather_cells = []
         for x in range(self.width):
             for y in range(self.height):
-                weather_cell = AirCell(f"Cell{x}{y}", self, 0.7, 0)
+                weather_cell = AirCell(f"Cell{x}{y}", self, 0.7, self.random.random())
                 #self.schedule.add(weather_cell)
                 self.weather_cells.append(weather_cell)
                 self.grid.place_agent(weather_cell, (x, y))

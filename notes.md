@@ -87,4 +87,8 @@ Another thing that's happening is that the islands are warm enough to keep rain 
 
 If nothing else, we can probably speed up the performance of the weather model by making it psuedo-matrixy. Instead of moving cells around, we can grab a cell via a wind vector and transfer the properties to it. That keeps the ABM architecture, but reduces the need to make 100x100 move calls, with all the weird accompanying artifacts. It's almost certainly the case that wind speeds (and specifically variable wind speeds) are a critical factor missing from the model.
 
-One last experiment: initializing cells with random humidity.
+One last experiment: initializing cells with random humidity. This actually produces surprisingly interesting and intricate patterns as the clouds grow, though they still end up everywhere.
+
+Oh no. The models I'm loosely basing this on assume mostly land, but this is mostly ocean. Which means that variable-temperature water might actually be important. Does that mean I'm going to need to model ocean currents?
+
+
