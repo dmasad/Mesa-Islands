@@ -137,6 +137,68 @@ class Ship(Agent):
                 self.choose_destination()
 
 
+class AirCell(Agent):
+    layer = "Weather"
+    # Weather model parameters
+    land_temp = 0.01
+    water_temp = 0.005
+    cloudy_factor = 0.5
+    
+    land_humidity = 0
+    water_humidity = 0.05
+    rain_temp = -0.02
+    
+    def __init__(self, unique_id, model, starting_temp, starting_humidity):
+        self.unique_id = unique_id
+        self.model = model
+        self.temperature = starting_temp
+        self.humidity = starting_humidity
+        self.pos = None
+        
+        self.cloudy = False
+        self.raining = False
+    
+    def step(self):
+        grid = self.model.grid
+        x, y = self.pos
+        x += self.model.wind[0]
+        y += self.model.wind[1]
+        grid.move_agent(self, grid.torus_adj((x, y)))
+        
+        x, y = self.pos
+        # Update temperature
+        if grid[x][y]["Land"] is not None:
+            delta = self.land_temp
+        else:
+            delta = self.water_temp
+        if self.cloudy:
+            delta *= self.cloudy_factor
+        self.temperature += delta
+        if self.raining:
+            self.temperature -= delta
+        
+        # Update humidity
+        if self.raining:
+            self.humidity -= 0.05
+        elif grid[x][y]["Land"] is None:
+            self.humidity += self.water_humidity
+        
+        # Average with neighbors
+        neighbors = grid.get_neighbors(self.pos, True, True)
+        neighbors = [cell for cell in neighbors if cell.layer=="Weather"]
+        nearby_temp = sum(cell.temperature for cell in neighbors)/len(neighbors)
+        nearby_humidity = sum(cell.humidity for cell in neighbors)/len(neighbors)
+        self.temperature = (self.temperature + nearby_temp)/2
+        self.humidity = (self.humidity + nearby_humidity)/2
+        
+        
+        #self.cloudy = (self.humidity > 0.3 + 0.3 * self.temperature)    
+        #self.raining =  (self.humidity > 0.35 + 0.5 * self.temperature)
+        self.cloudy = (self.humidity > 0.4 + 0.3 * self.temperature)    
+        self.raining =  (self.humidity > 0.6 + 0.5 * self.temperature)
+            
+        
+
 class WorldModel(Model):
     
     # Tracery grammar for naming things:
@@ -162,7 +224,8 @@ class WorldModel(Model):
         self.grid = LayeredGrid(self.width, self.height, torus=True, 
                                 layers={"Land": "Single", 
                                         "People": "Multi",
-                                        "Ships": "Multi"})
+                                        "Ships": "Multi",
+                                        "Weather": "Multi"})
         
         # Set up islands
         self.n_islands = n_islands
@@ -180,21 +243,25 @@ class WorldModel(Model):
         # Set up people
         self.n_agents = n_agents
         self.syllable_weights = make_weighted_syllables()
-        self.create_agents()
+        # self.create_agents()
         
         # Set up seafaring: ports and shipping lanes
         self.ports = {}
         self.ports_per_island = 1
-        self.create_ports()
+        #self.create_ports()
         self.sea_lanes = {}
-        self.calculate_sea_lanes()
+        #self.calculate_sea_lanes()
         
         # Update ship naming scheme with port names
         self.grammar["place"] = [port for port in self.ports]
         self.grammar = tracery.Grammar(self.grammar)
         
         # Set up ships
-        self.make_ships()
+        # self.make_ships()
+        
+        # Set up weather
+        self.wind = [1, 0]
+        self.setup_weather()
         
         # Set up logging
         self.verbose = True
@@ -218,6 +285,15 @@ class WorldModel(Model):
         for _ in range(total_cells):
             island = self.random.choice(self.islands)
             island.grow()
+    
+    def setup_weather(self):
+        self.weather_cells = []
+        for x in range(self.width):
+            for y in range(self.height):
+                weather_cell = AirCell(f"Cell{x}{y}", self, 0.7, 0)
+                #self.schedule.add(weather_cell)
+                self.weather_cells.append(weather_cell)
+                self.grid.place_agent(weather_cell, (x, y))
     
     def create_agents(self):
         for i in range(self.n_agents):
@@ -294,6 +370,14 @@ class WorldModel(Model):
                     print(f"Could not find path between {start_name} and {end_name}")
                 
     def step(self):
+        # Update the weather
+        # Update the wind
+        if self.random.random() < 0.25:
+            d = self.random.choice([0, 1])
+            self.wind[d] = self.random.choice([-1, 0, 1])
+        self.random.shuffle(self.weather_cells)
+        for cell in self.weather_cells:
+            cell.step()
         self.schedule.step()
     
     def log(self, message):

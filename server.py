@@ -1,7 +1,7 @@
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import CanvasGrid
 
-from island_model import WorldModel, IslandCell, Person, Port, Ship
+from island_model import WorldModel, IslandCell, Person, Port, Ship, AirCell
 
 def get_portrayal(agent):
     if agent is None:
@@ -22,6 +22,18 @@ def get_portrayal(agent):
     elif type(agent) is Ship:
         portrayal = {"Shape": "circle", "r": 0.7, 
                      "Color": "Black", "Filled": "true", "Layer": 2}
+    
+    elif type(agent) is AirCell:
+        if not agent.cloudy and not agent.raining:
+            return
+        else:
+            if agent.cloudy:
+                color = "LightGray"
+            if agent.raining:
+                color = "DarkSlateGray"
+            portrayal = {"Shape": "rect", "w": 0.7, "h": 0.7, 
+                     "Color": color, "Filled": "true", "Layer": 2}
+    
     return portrayal
 
 canvas_element = CanvasGrid(get_portrayal, 100, 100, 500, 500)
