@@ -91,4 +91,16 @@ One last experiment: initializing cells with random humidity. This actually prod
 
 Oh no. The models I'm loosely basing this on assume mostly land, but this is mostly ocean. Which means that variable-temperature water might actually be important. Does that mean I'm going to need to model ocean currents?
 
+The updated implementation of the cell model (Without moving cells around, which was a terrible idea born of it being late at night) seems to run much better. This also has the happy side effect of adding per-cell wind direction and speed. Now to add a wind vector field (instead of just a universal wind vector), and adjust temperature for it.
 
+Adding just a static vector field yields interesting and improved weather patterns (including finally more clouds over land). However, after a little while the weather patterns seem to reach an equilibrium and stabilize -- probably a sign of progress, but less interesting visually.
+
+Before we add shifting winds, let's try to adjust the air temperature based on wind speed and see what happens. 
+
+This (plus, and this is probably important, having rainfall reduce humidity by a fraction instead of a constant) produce increasingly nice-looking weather patterns, though they still seem to stabilize. So, finally, it's time to allow the winds to shift.
+
+Random wind shifts do in fact make the weather patterns less stable and look more natural, though cloud cover is still pretty universal.
+
+Even without the front-end, the model is getting into slow territory (minutes to run 100 steps with no frontend).
+
+It looks like the actual distribution of humidity in the air is much more interesting than the distribution of clouds. Simply tweaking the cloud threshold actually seems to improve things a lot. Clouds still move around in great big bands, but at least they don't cover the entire map.

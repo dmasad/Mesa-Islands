@@ -28,7 +28,8 @@ def get_portrayal(agent):
             return
         else:
             if agent.cloudy:
-                color = "LightGray"
+                #color = "LightGray"
+                color = "rgba(80, 80, 80, 0.5)"
             if agent.raining:
                 color = "DarkSlateGray"
             portrayal = {"Shape": "rect", "w": 0.7, "h": 0.7, 
