@@ -51,9 +51,56 @@ Hitting a problem with the network somehow not being disconnected around the por
 
 (Well, possible, but after way too much time I just forgot an argument in the shortest-path syntax)
 
+## Adding the ships
 
+Now to implement the actual ships. As a first step, we'll just have some ships start at random ports, and choose a new port at random to sail to. A next step after that might be to have a trade model that determines the destinations.
 
+A fun inintentional phenomenon that emerges when all the ships start in port at the same time and leave close together is that they look like they're convoying. 
 
+Last addition for now: name the ports and ships using the language model.
 
+This more or less works. The main aesthetic problem now is that too many randomly-generated names read all together just start to look like gibberish; for example:
 
+    70: Charity Courage departed Giruuntyu for Naaud
+    70: President's Wisdom arrived at Vaukij.
+    70: Elector's Wisdom departed Ec Noyw for Kievu
+    70: Ib Ucygry Glory departed Giruuntyu for Kievu
+    70: Naaud Prince arrived at Kievu.
 
+# Weather simulation
+
+Now we're getting into real overkill territory. There's almost certainly a better way to do this, but I'm going to try a simple weather model as an ABM. Agents will be cells of air, blown around by the wind. Each cell will have a temperature and humidity. Temperature goes up over land, and when there are no clouds; humidity goes up over water. Clouds and rain happen with high humidity and low temperature.
+
+The first simulation run with the first draft of weather enabled is Lovecraftian. The world suddenly fills with clouds, then never-ending rain that covers everything.
+
+Turning off humidity gains while rain is actively falling produces oscillation between rain and clouds, but the world is still mostly cloudly.
+
+Time to add temperature and humidity diffusion?
+
+This seems to help, and the rain still does some oscillation things, but the world is still extremely cloudy.
+
+One more tweak to add sooner rather than later: let's have the wind change direction every so often. This doesn't seem to make a huge difference.
+
+Increasing the humidity lost by rain does seem to produce bands of rain that are quite nice, but things are still too cloudy. The main issue is that the clouds are everywhere, not just in nice bands. One possibility is that we just need to raise the threshold for clouds / rain? But this didn't really end up working either.
+
+Another thing that's happening is that the islands are warm enough to keep rain and clouds both away.
+
+If nothing else, we can probably speed up the performance of the weather model by making it psuedo-matrixy. Instead of moving cells around, we can grab a cell via a wind vector and transfer the properties to it. That keeps the ABM architecture, but reduces the need to make 100x100 move calls, with all the weird accompanying artifacts. It's almost certainly the case that wind speeds (and specifically variable wind speeds) are a critical factor missing from the model.
+
+One last experiment: initializing cells with random humidity. This actually produces surprisingly interesting and intricate patterns as the clouds grow, though they still end up everywhere.
+
+Oh no. The models I'm loosely basing this on assume mostly land, but this is mostly ocean. Which means that variable-temperature water might actually be important. Does that mean I'm going to need to model ocean currents?
+
+The updated implementation of the cell model (Without moving cells around, which was a terrible idea born of it being late at night) seems to run much better. This also has the happy side effect of adding per-cell wind direction and speed. Now to add a wind vector field (instead of just a universal wind vector), and adjust temperature for it.
+
+Adding just a static vector field yields interesting and improved weather patterns (including finally more clouds over land). However, after a little while the weather patterns seem to reach an equilibrium and stabilize -- probably a sign of progress, but less interesting visually.
+
+Before we add shifting winds, let's try to adjust the air temperature based on wind speed and see what happens. 
+
+This (plus, and this is probably important, having rainfall reduce humidity by a fraction instead of a constant) produce increasingly nice-looking weather patterns, though they still seem to stabilize. So, finally, it's time to allow the winds to shift.
+
+Random wind shifts do in fact make the weather patterns less stable and look more natural, though cloud cover is still pretty universal.
+
+Even without the front-end, the model is getting into slow territory (minutes to run 100 steps with no frontend).
+
+It looks like the actual distribution of humidity in the air is much more interesting than the distribution of clouds. Simply tweaking the cloud threshold actually seems to improve things a lot. Clouds still move around in great big bands, but at least they don't cover the entire map.

@@ -59,3 +59,11 @@ def make_place_name_model(syllable_weights, n_prefixes, prob_prefix,
     
     return make_place_name
         
+def rotate_vector(v, angle):
+    ''' Rotate a vector by an angle
+    '''
+    transformation = np.array([
+        [ np.cos(angle), -np.sin(angle) ],
+        [ np.sin(angle),  np.cos(angle) ]
+    ])
+    return transformation.dot(v)
