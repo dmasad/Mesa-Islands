@@ -104,3 +104,13 @@ Random wind shifts do in fact make the weather patterns less stable and look mor
 Even without the front-end, the model is getting into slow territory (minutes to run 100 steps with no frontend).
 
 It looks like the actual distribution of humidity in the air is much more interesting than the distribution of clouds. Simply tweaking the cloud threshold actually seems to improve things a lot. Clouds still move around in great big bands, but at least they don't cover the entire map.
+
+### Refactoring
+
+Taking a brief detour to refactor some of the codebase into a few semi-independent submodels in order to keep things from becoming too messy.
+
+Spinning off the weather model into its own class because it has a lot of moving parts that are largely independent of the rest of the model; weather cells in particular have their own updating logic that's different from that of agents, in that each submodel step requires multiple internal steps executed on each weather cell -- wind, temperature/humidity change, diffusion, and cloudy/raining checks.
+
+Spinning the language model into its own subclass because it should be largely reusable across different models, and we may even want to have multiple languages within one world. It will also make it easier to swap language models (e.g. replace random syllables with a Markov chain trained on real names) without changing the rest of the code, so long as the alternative models implement the same API.
+
+TODO: spin shipping off into its own submodel too.

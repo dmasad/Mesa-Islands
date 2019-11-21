@@ -4,12 +4,13 @@ import networkx as nx
 from mesa import Model, Agent
 from mesa.time import RandomActivation
 #from mesa.space import MultiGrid
+
 from layer_grid import LayeredGrid
+
 from weather_model import WeatherSubmodel, AirCell
+from language_model import RandomLanguageModel
 from utils import (weighted_random, make_weighted_syllables, make_word, 
                    make_place_name_model, rotate_vector)
-
-import tracery
 
 class IslandCell:
     ''' One tile of land.
@@ -140,17 +141,6 @@ class Ship(Agent):
 
 class WorldModel(Model):
     
-    # Tracery grammar for naming things:
-    grammar = {
-        "virtue": ["Courage", "Kindness", "Wisdom", "Cunning", "Charity", 
-                   "Mercy", "Love", "Pride", "Glory"],
-        "title": ["Prince", "Princess", "Duke", "President", "Exilarch", 
-                  "Duchess", "Elector", "Senator"],
-        "ship_names": ["#virtue# of #place#", "#place# #virtue#", 
-                       "#title# of #place#", "#place# #title#", 
-                       "#virtue# #virtue#", "#title#'s #virtue#"]
-    }
-    
     def __init__(self, n_islands=1, land_fraction=0.25, n_agents=100):
         
         self.schedule = RandomActivation(self)
@@ -173,30 +163,21 @@ class WorldModel(Model):
         self.make_islands()
         
         # Generate language
-        self.syllable_weights = make_weighted_syllables(3)
-        self.make_place_name = make_place_name_model(self.syllable_weights, 
-                                                     n_prefixes=2, 
-                                                     prob_prefix=0.3,
-                            syllable_count_weights={2: 1, 3: 3, 4: 1, 5:0.5})
+        self.language = RandomLanguageModel()        
         
         # Set up people
         self.n_agents = n_agents
-        self.syllable_weights = make_weighted_syllables()
         # self.create_agents()
         
         # Set up seafaring: ports and shipping lanes
         self.ports = {}
         self.ports_per_island = 1
-        #self.create_ports()
+        self.create_ports()
         self.sea_lanes = {}
-        #self.calculate_sea_lanes()
-        
-        # Update ship naming scheme with port names
-        self.grammar["place"] = [port for port in self.ports]
-        self.grammar = tracery.Grammar(self.grammar)
+        self.calculate_sea_lanes()
         
         # Set up ships
-        # self.make_ships()
+        self.make_ships()
         
         # Set up weather
         self.weather = WeatherSubmodel(self)
@@ -227,7 +208,9 @@ class WorldModel(Model):
     
     def create_agents(self):
         for i in range(self.n_agents):
-            name = make_word(self.syllable_weights)
+            #name = make_word(self.syllable_weights)
+            syllables = self.random.choice([2, 3, 3, 3, 4, 5])
+            name = self.language.make_word(syllables)
             agent = Person(i, name, self)
             # Pick a starting island and cell
             island = self.random.choice(self.islands)
@@ -239,7 +222,7 @@ class WorldModel(Model):
         ports = list(self.ports.values())
         for i in range(self.n_agents):
             #name = f"Ship {i}"
-            name = self.grammar.flatten("#ship_names#")
+            name = self.language.make_ship_name()
             port = self.random.choice(ports)
             ship = Ship(name, name, self, port)
             self.grid.place_agent(ship, port.pos)
@@ -254,8 +237,8 @@ class WorldModel(Model):
                               if not cell.landlocked]
             for _ in range(self.ports_per_island):
                 cell = self.random.choice(possible_cells)
-                #name = f"Port {port_count}"
-                name = self.make_place_name()
+                name = self.language.make_place_name()
+                self.language.add_place_name(name)
                 port = Port(name, cell.pos)
                 self.grid.place_agent(port, cell.pos)
                 self.ports[name] = port
