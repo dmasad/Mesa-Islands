@@ -8,7 +8,7 @@ from mesa.time import RandomActivation
 from layer_grid import LayeredGrid
 
 from weather_model import WeatherSubmodel, AirCell
-from language_model import RandomLanguageModel
+from language_model import RandomLanguageModel, MarkovLanguage
 from utils import (weighted_random, make_weighted_syllables, make_word, 
                    make_place_name_model, rotate_vector)
 
@@ -163,7 +163,8 @@ class WorldModel(Model):
         self.make_islands()
         
         # Generate language
-        self.language = RandomLanguageModel()        
+        #self.language = RandomLanguageModel()
+        self.language = MarkovLanguage.make_psuedo_english()
         
         # Set up people
         self.n_agents = n_agents

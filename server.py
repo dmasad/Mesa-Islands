@@ -45,6 +45,7 @@ model_params = {"n_islands": 7,
 
 server = ModularServer(WorldModel, [canvas_element], "Islands", model_params)
 server.port = 8521
+server.verbose = False
 
 if __name__ == "__main__":
     server.launch()

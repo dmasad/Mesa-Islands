@@ -114,3 +114,33 @@ Spinning off the weather model into its own class because it has a lot of moving
 Spinning the language model into its own subclass because it should be largely reusable across different models, and we may even want to have multiple languages within one world. It will also make it easier to swap language models (e.g. replace random syllables with a Markov chain trained on real names) without changing the rest of the code, so long as the alternative models implement the same API.
 
 TODO: spin shipping off into its own submodel too.
+
+## Markov chain language models
+
+Markov chains are almost as good as neural nets at generating fake words and phrases that sound almost right, so let's use those to generate some place names. 
+
+Corpora are all from: https://github.com/dariusk/corpora
+
+Some generated place-names:
+    Trader
+    Lanteld
+    Whipston
+    Chille
+    Ashoroudbackeldhametersilley
+    Atton
+    Earlestle
+    Haxmunwickfasingstley
+    Shipton-Thridgwad
+    Bare
+
+And some first names:
+    Hairetevor
+    Mayton
+    Jordo
+    Mare
+    Mathan
+    Jalin
+    Lillyn
+    Brianicaren
+    Mark
+    Ashlexany

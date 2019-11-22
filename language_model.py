@@ -3,9 +3,13 @@ Language submodel
 
 Collect all the code needed to generate random names for people, places, ships
 '''
+
 import string
 import random
+import json
+from collections import defaultdict
 import numpy as np
+
 import tracery
 
 from utils import weighted_random
@@ -84,4 +88,84 @@ class RandomLanguageModel:
         grammar = tracery.Grammar(self.grammar)
         return grammar.flatten("#ship_name#")
     
+class MarkovChain:
+    ''' Train an n-order Markov chain and generate words from it.
     
+    (The order is simply how many characters to use to choose the next one)
+    Transitions are stored as a defaultdict with the structure 
+        {token: [char, char, ...], token: ...}
+    Special tokens "<START>" and "<END>" designate the beginning and end of
+    a string.
+        
+    '''
+    
+    def __init__(self, order=1, vocabulary=None):
+        self.transitions = defaultdict(list)
+        self.order = order
+        if vocabulary is not None:
+            self.train(vocabulary)
+    
+    def train(self, vocabulary, replace=False):
+        if replace:
+            self.transitions = defaultdict(list)
+        for word in vocabulary:
+            self.transitions["<START>"].append(word[:self.order])
+            for i in range(self.order, len(word)):
+                self.transitions[word[i-self.order:i]].append(word[i])
+            self.transitions[word[-self.order:]].append("<END>")
+    
+    def generate(self):
+        word = ""
+        token = "<START>"
+        while True:
+            next_char = random.choice(self.transitions[token])
+            if next_char == "<END>":
+                return word
+            word += next_char
+            token = word[-self.order:]
+        return word
+
+class MarkovLanguage:
+    ''' Use Markov Chain models to generate names and places.
+    '''
+    
+    def __init__(self, name_corpus, place_corpus, order=2):
+        ''' Create a new language model
+        
+        Args:
+            name_corpus: List of words to use as (first) names
+            place_corpus: List of words to use for place-names
+        '''
+        self.order = order
+        self.name_model = MarkovChain(order, name_corpus)
+        self.place_model = MarkovChain(order, place_corpus)
+    
+    def make_place_name(self):
+        return self.place_model.generate()
+    
+    def make_ship_name(self):
+        if random.random() < 0.5:
+            return self.name_model.generate()
+        else:
+            return self.make_place_name()
+    
+    def add_place_name(self, place_name):
+        ''' TODO: populate this
+        '''
+        pass
+    
+    @classmethod
+    def make_psuedo_english(cls, order=2):
+        ''' Make Markov chain of English names from hard-coded corpora
+        '''
+        
+        with open("corpora/english_towns_cities.json") as f:
+            place_corpus = json.load(f)
+            town_names = place_corpus["towns"] + place_corpus["cities"]
+        
+        with open("corpora/firstNames.json") as f:
+            name_corpus = json.load(f)
+            first_names = name_corpus["firstNames"]
+        
+        return cls(first_names, town_names, order)
+        
