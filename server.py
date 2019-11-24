@@ -21,7 +21,7 @@ def get_portrayal(agent):
     
     elif type(agent) is Ship:
         portrayal = {"Shape": "circle", "r": 0.7, 
-                     "Color": "Black", "Filled": "true", "Layer": 2}
+                     "Color": "Red", "Filled": "true", "Layer": 2}
     
     elif type(agent) is AirCell:
         if not agent.cloudy and not agent.raining:

@@ -9,6 +9,7 @@ from layer_grid import LayeredGrid
 
 from weather_model import WeatherSubmodel, AirCell
 from language_model import RandomLanguageModel, MarkovLanguage
+from sailing_model import Port, Ship, calculate_sea_lanes
 from utils import (weighted_random, make_weighted_syllables, make_word, 
                    make_place_name_model, rotate_vector)
 
@@ -81,63 +82,6 @@ class Person(Agent):
         # print(f"{self.name} moved from {self.pos} to {next_step}")
         grid.move_agent(self, next_step)
 
-class Port:
-    layer = "Ships"
-    
-    def __init__(self, name, pos):
-        self.pos = pos
-        self.name = name
-
-class Ship(Agent):
-    layer = "Ships"
-    
-    def __init__(self, unique_id, name, model, starting_port):
-        ''' Create a ship
-        '''
-        self.unique_id = unique_id
-        self.name = name
-        self.model = model
-        self.destination = None
-        self.current_path = None
-        self.current_step = None
-        
-        self.condition = "At port"
-        self.current_port = starting_port.name
-        self.pos = starting_port.pos
-    
-    def choose_destination(self):
-        ''' Chart a course to a random port.
-        '''
-        # Choose a port
-        next_port = self.random.choice(list(self.model.ports.values()))
-        if (self.current_port, next_port.name) not in self.model.sea_lanes:
-            return
-        
-        self.destination = next_port.name
-        self.condition = "Sailing"
-        self.current_step = 0
-        self.path = self.model.sea_lanes[(self.current_port, self.destination)]
-        self.model.log(f"{self.name} departed {self.current_port} for {self.destination}")
-    
-    def sail(self):
-        self.current_step += 1
-        if self.current_step == len(self.path):
-            self.condition = "At port"
-            self.current_port = self.destination
-            self.destination = None
-            self.model.log(f"{self.name} arrived at {self.current_port}.")
-            return
-            
-        next_step = self.path[self.current_step]
-        self.model.grid.move_agent(self, next_step)
-    
-    def step(self):
-        if self.condition == "Sailing":
-            self.sail()
-        elif self.condition == "At port":
-            if self.random.random() < 0.25:
-                self.choose_destination()
-
 
 class WorldModel(Model):
     
@@ -174,8 +118,7 @@ class WorldModel(Model):
         self.ports = {}
         self.ports_per_island = 1
         self.create_ports()
-        self.sea_lanes = {}
-        self.calculate_sea_lanes()
+        self.sea_lanes = calculate_sea_lanes(self)
         
         # Set up ships
         self.make_ships()
@@ -245,44 +188,7 @@ class WorldModel(Model):
                 self.ports[name] = port
                 port_count += 1
     
-    def calculate_sea_lanes(self):
-        ''' Build a network of sea cells + ports, then calculate shortest paths
-        '''
-        # Build the graph
-        # TODO: This can be streamlined for code aesthetics and performance
-        G = nx.Graph()
-        for x in range(self.width):
-            for y in range(self.height):
-                cell = (x, y)
-                if self.grid[x][y]["Land"] is None:
-                    G.add_node(cell)
-                    for neighbor in self.grid.get_neighborhood(cell, False):
-                        x, y = neighbor
-                        if self.grid[x][y]["Land"] is None:
-                            G.add_edge(cell, neighbor)
-        # Add ports:
-        for port in self.ports.values():
-            G.add_node(port.pos)
-            for neighbor in self.grid.get_neighborhood(port.pos, False):
-                x, y = neighbor
-                if self.grid[x][y]["Land"] is None:
-                    G.add_edge(port.pos, neighbor)
-        
-        # Now do the pathfinding:
-        for start_name, start_port in self.ports.items():
-            for end_name, end_port in self.ports.items():
-                if (start_name == end_name or 
-                    (end_name, start_name) in self.sea_lanes): 
-                    continue
-                try:
-                    path = nx.shortest_path(G, start_port.pos, end_port.pos)
-                    self.sea_lanes[(start_name, end_name)] = path
-                    path = list(path)
-                    path.reverse()
-                    self.sea_lanes[(end_name, start_name)] = path
-                except:
-                    print(f"Could not find path between {start_name} and {end_name}")
-                
+
     def step(self):
         self.weather.weather_step()
         self.schedule.step()
