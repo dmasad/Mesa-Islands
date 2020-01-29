@@ -2,6 +2,8 @@
 
 
 '''
+from itertools import product
+
 import networkx as nx
 
 from mesa import Agent
@@ -88,6 +90,17 @@ class Ship(Agent):
                 self.choose_destination()
                 
 
+def get_closest_land(model, cell):
+    ''' Get the distance to the closest land cell, for weighting.
+    '''
+    min_dist = model.width + model.height
+    for (x, y) in product(range(model.width), range(model.height)):
+        if model.grid[x][y]["Land"] is None: continue
+        dist = model.grid.get_distance((x, y), cell)
+        min_dist = min(min_dist, dist)
+    return min_dist
+        
+
 def calculate_sea_lanes(model):
     ''' Build a network of sea cells + ports, then calculate shortest paths
     '''
@@ -100,9 +113,11 @@ def calculate_sea_lanes(model):
             if model.grid[x][y]["Land"] is None:
                 G.add_node(cell)
                 for neighbor in model.grid.get_neighborhood(cell, False):
+                    # Get distance from land
+                    dist = get_closest_land(model, neighbor)
                     x, y = neighbor
                     if model.grid[x][y]["Land"] is None:
-                        G.add_edge(cell, neighbor)
+                        G.add_edge(cell, neighbor, weight=dist)
     # Add ports:
     for port in model.ports.values():
         G.add_node(port.pos)
@@ -119,7 +134,8 @@ def calculate_sea_lanes(model):
                 (end_name, start_name) in sea_lanes): 
                 continue
             try:
-                path = nx.shortest_path(G, start_port.pos, end_port.pos)
+                path = nx.shortest_path(G, start_port.pos, end_port.pos,
+                                        weight='weight')
                 sea_lanes[(start_name, end_name)] = path
                 path = list(path)
                 path.reverse()

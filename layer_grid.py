@@ -27,6 +27,21 @@ class LayeredGrid(Grid):
                 return None
             if self.layers[layer] == "Multi":
                 return set()
+            
+    def get_distance(self, pos_1, pos_2):
+        """ Get the distance between two point, accounting for toroidal space.
+        Args:
+            pos_1, pos_2: Coordinate tuples for both points.
+        """
+        x1, y1 = pos_1
+        x2, y2 = pos_2
+
+        dx = abs(x1 - x2)
+        dy = abs(y1 - y2)
+        if self.torus:
+            dx = min(dx, self.width - dx)
+            dy = min(dy, self.height - dy)
+        return (dx * dx + dy * dy)**0.5
     
     def _place_agent(self, pos, agent):
         ''' Place the agent at the given location and layer. '''
