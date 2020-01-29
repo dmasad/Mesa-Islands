@@ -114,7 +114,7 @@ def calculate_sea_lanes(model):
                 G.add_node(cell)
                 for neighbor in model.grid.get_neighborhood(cell, False):
                     # Get distance from land
-                    dist = get_closest_land(model, neighbor)
+                    dist = get_closest_land(model, neighbor)**0.5
                     x, y = neighbor
                     if model.grid[x][y]["Land"] is None:
                         G.add_edge(cell, neighbor, weight=dist)
