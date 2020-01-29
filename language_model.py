@@ -145,9 +145,9 @@ class MarkovLanguage:
     
     def make_ship_name(self):
         if random.random() < 0.5:
-            return self.name_model.generate()
+            return "The " + self.name_model.generate()
         else:
-            return self.make_place_name()
+            return "The " + self.make_place_name()
     
     def add_place_name(self, place_name):
         ''' TODO: populate this
