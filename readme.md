@@ -7,7 +7,7 @@ Right now, every run of the model generates a random archipelago of islands, wit
 
 There are lots more features I'd like to implement, including sailors and other simulated people to sail the ships and populate the ports, goods for the ships to carry and trade, having the weather actually affect the ships' voyages, and more. Getting stories out of these also requires curation, which is not implemented either. If you want to add those features here -- or fork the model and modify it yourself -- feel free!
 
-The basic idea of an island-heavy storyworld (and the word *storyworld* itself) comes from [James Ryan's](https://www.jamesryan.world/) dissertation, [Curating Simulated Storyworlds](https://www.researchgate.net/publication/330855103_Curating_Simulated_Storyworlds). The weather model is almost entirely based on Nick McDonald's [procedural weather patterns](https://weigert.vsos.ethz.ch/2018/07/10/procedural-weather-patterns/) blog post.
+The basic idea of an island-heavy storyworld (and the term *storyworld* itself) comes from [James Ryan's](https://www.jamesryan.world/) dissertation, [Curating Simulated Storyworlds](https://www.researchgate.net/publication/330855103_Curating_Simulated_Storyworlds). The weather model is almost entirely based on Nick McDonald's [procedural weather patterns](https://weigert.vsos.ethz.ch/2018/07/10/procedural-weather-patterns/) blog post.
 
 ## How to Run
 
@@ -56,6 +56,8 @@ The weather simulation is its own submodel, with its own execution loop. The wea
 6. The cell's state -- clear, cloudy or rain -- is updated based on its current temperature and humidity.
 
 This model is primarily derived from Nick McDonald's [procedural weather patterns](https://weigert.vsos.ethz.ch/2018/07/10/procedural-weather-patterns/) blog post and accompanying code. Unlike that model, this weather model does not incorporate terrain elevation; and this model implements wind on a per-cell basis instead of one global wind vector, to account for the fact that this world is intended to be larger. Finally, the parameters were largely tweaked by trial and error until I got weather that looked about right.
+
+Right now the model starts with no clouds or rain, and it takes a few steps for the full weather system to develop. If you want to start the model where the weather is in full swing, you can probably run the `weather.weather_step()` submodel loop some number of times before having everything else begin. This would be more realistic (since the world starts with multiple ships and ports, it isn't implied to be brand-new), but visualizing the weather system emerging is both useful for debugging, and kind of cool to watch.
 
 #### layer_grid.py
 
