@@ -7,7 +7,7 @@ Right now, every run of the model generates a random archipelago of islands, wit
 
 There are lots more features I'd like to implement, including sailors and other simulated people to sail the ships and populate the ports, goods for the ships to carry and trade, having the weather actually affect the ships' voyages, and more. Getting stories out of these also requires curation, which is not implemented either. If you want to add those features here -- or fork the model and modify it yourself -- feel free!
 
-The basic idea of an island-heavy storyworld (and the word *storyworld* itself) comes from [James Ryan's](https://www.jamesryan.world/) dissertation, [Curating Simulated Storyworlds](https://www.researchgate.net/publication/330855103_Curating_Simulated_Storyworlds). The weather model is almost entirely based on Nick McDonald's [procedural weather patterns](https://weigert.vsos.ethz.ch/2018/07/10/procedural-weather-patterns/) blog post.
+The basic idea of an island-heavy storyworld (and the term *storyworld* itself) comes from [James Ryan's](https://www.jamesryan.world/) dissertation, [Curating Simulated Storyworlds](https://www.researchgate.net/publication/330855103_Curating_Simulated_Storyworlds). The weather model is almost entirely based on Nick McDonald's [procedural weather patterns](https://weigert.vsos.ethz.ch/2018/07/10/procedural-weather-patterns/) blog post.
 
 ## How to Run
 

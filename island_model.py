@@ -128,11 +128,11 @@ class WorldModel(Model):
         self.weather.setup_weather()
         
         # Set up logging
-        self.verbose = True
+        self.verbose = False
         self._log = []
     
     def make_islands(self):
-        '''
+        ''' Grow islands one random adjacent cell at a time.
         '''
         # Create islands
         for i in range(self.n_islands):
@@ -151,6 +151,9 @@ class WorldModel(Model):
             island.grow()
     
     def create_agents(self):
+        ''' Create Person agents, who walk around on land.
+        TODO: Do something more interesting with them.
+        '''
         for i in range(self.n_agents):
             #name = make_word(self.syllable_weights)
             syllables = self.random.choice([2, 3, 3, 3, 4, 5])
@@ -174,6 +177,9 @@ class WorldModel(Model):
     
     def create_ports(self):
         ''' Choose random non-landlocked island cell for a port 
+        
+        TODO: Make sure ports aren't placed on lakes where there's no outlet
+        to any other ports.
         '''
         port_count = 0
         for island in self.islands:
