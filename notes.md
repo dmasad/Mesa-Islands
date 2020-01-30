@@ -150,3 +150,5 @@ And some first names:
 Coming back to this after several months. In order to get more interesting sea lanes, I'm trying adding a cost to move from cell to cell. Initially, the cost was just the distance to land for each cell. (Sidebar: it turns out that `get_distance` is only implemented for `ContinuousSpace` so I had to copy that into `LayeredGrid`). That increases setup time substantially, and actually led to less-interesting paths, since now the optimal route from A to C is to follow the route from A to B and then B to C.
 
 Changing the cost to the square-root of distance actually produces some diagonal-ish paths, which are obviously more interesting than nothing but straight lines.
+
+The run-time on this is unacceptably long. Instead of doing the smart thing and profiling, I'm just going to swap in random weights and see how much that matters. Yup, the unnecessarily-repeated distance calculations (which, upon further examination, were being done multiple times for each cell, yikes) were driving the time, but also the randomly-weighted paths look a lot more organic anyway.
