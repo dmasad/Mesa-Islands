@@ -3,6 +3,8 @@
 
 Most agent-based models are built for research or analysis purposes. Some things that look an awful lot like ABMs are built to be [parts of] games. This model was built for roughly the same reasons as people build model train sets or dollhouses -- it was fun to build and play with, and it might be fun to look at. Additionally, it's intended to be a tech demonstration for the [Mesa ABM library](https://github.com/projectmesa/mesa) which I'm a co-developer of.
 
+![Model screenshot](/docs/screenshot.PNG)
+
 Right now, every run of the model generates a random archipelago of islands, with ports on their coasts, and ships that sail between them. It also generates a language model -- either a random collection of weighted syllables, or a Markov model based on English -- which it uses to name the ports and ships. Finally, the model also generates simulated weather, with temperature and humidity giving rise to clouds which are blown around by the wind and pour down rain. 
 
 There are lots more features I'd like to implement, including sailors and other simulated people to sail the ships and populate the ports, goods for the ships to carry and trade, having the weather actually affect the ships' voyages, and more. Getting stories out of these also requires curation, which is not implemented either. If you want to add those features here -- or fork the model and modify it yourself -- feel free!
